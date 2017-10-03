@@ -6,13 +6,17 @@ module JsonApiClient
       record_class = result_set.record_class
       grouped_data = data.group_by{|datum| datum["type"]}
       @data = grouped_data.inject({}) do |h, (type, records)|
-        klass = Utils.compute_type(record_class, record_class.key_formatter.unformat(type).singularize.classify)
-        h[type] = records.map do |datum|
-          params = klass.parser.parameters_from_resource(datum)
-          resource = klass.load(params)
-          resource.last_result_set = result_set
-          resource
-        end.index_by(&:id)
+        begin
+          klass = Utils.compute_type(record_class, record_class.key_formatter.unformat(type).singularize.classify)
+          h[type] = records.map do |datum|
+            params = klass.parser.parameters_from_resource(datum)
+            resource = klass.load(params)
+            resource.last_result_set = result_set
+            resource
+          end.index_by(&:id)
+        rescue NameError => e
+          puts "Missing '#{type}' type in JSON API response"
+        end
         h
       end
     end
