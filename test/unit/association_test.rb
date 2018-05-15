@@ -21,6 +21,15 @@ class PrefixedProperty < TestResource
   has_one :prefixed_owner
 end
 
+class DuplicateProperty < TestResource
+  belongs_to :owner
+  belongs_to :owner
+
+  def self.table_name
+    'properties'
+  end
+end
+
 module Namespaced
   class Owner < TestResource
     has_many :properties
@@ -463,6 +472,21 @@ class AssociationTest < MiniTest::Test
     property = Property.includes('owner').find(1).first
 
     assert_nil(property.owner)
+  end
+
+  def test_prefixed_duplicate_association_loads
+    stub_request(:get, "http://example.com/owners/1/properties/1")
+      .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
+        data: [
+          {
+            id: 1,
+            type: 'property',
+            attributes: {address: "123 Main St."}
+          }
+        ]
+      }.to_json)
+    property = DuplicateProperty.where(owner_id: 1).find(1).first
+    assert_equal(property.address, '123 Main St.')
   end
 
   def test_namespaced_association_class_discovery
