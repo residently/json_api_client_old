@@ -94,6 +94,7 @@ module JsonApiClient
       alias all to_a
 
       def find(args = {})
+        raise ArgumentError, "Arguments cannot be nil" if args.nil?
         case args
         when Hash
           where(args)

@@ -77,4 +77,10 @@ class FindingTest < MiniTest::Test
     assert_equal ["2", "3"], articles.map(&:id)
   end
 
+  def test_find_nil
+    assert_raises ArgumentError do
+      Article.find(nil)
+    end
+  end
+
 end
