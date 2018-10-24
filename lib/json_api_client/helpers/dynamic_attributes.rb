@@ -16,7 +16,7 @@ module JsonApiClient
       end
 
       def [](key)
-        attributes.fetch(name, nil)
+        attributes.fetch(key, nil)
       end
 
       def []=(key, value)
