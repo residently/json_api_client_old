@@ -11,16 +11,16 @@ module JsonApiClient
 
         return @attributes unless attrs.present?
         attrs.each do |key, value|
-          self[key] = value
+          send("#{key}=", value)
         end
       end
 
       def [](key)
-        attributes.fetch(key, nil)
+        read_attribute(key)
       end
 
       def []=(key, value)
-        attributes[key] = value
+        set_attribute(key, value)
       end
 
       def respond_to_missing?(method, include_private = false)
@@ -38,13 +38,27 @@ module JsonApiClient
       protected
 
       def method_missing(method, *args, &block)
-        if method.to_s =~ /^(.*)=$/
-          self[$1] = args.first
+        normalized_method = if key_formatter
+                              key_formatter.unformat(method.to_s)
+                            else
+                              method.to_s
+                            end
+
+        if normalized_method =~ /^(.*)=$/
+          set_attribute($1, args.first)
         elsif has_attribute?(method)
           attributes[method]
         else
           super
         end
+      end
+
+      def read_attribute(name)
+        attributes.fetch(name, nil)
+      end
+
+      def set_attribute(name, value)
+        attributes[name] = value
       end
 
       def key_formatter
