@@ -13,7 +13,7 @@ module JsonApiClient
         def _define_association(attr_name, association_klass, options = {})
           attr_name = attr_name.to_sym
           association = association_klass.new(attr_name, self, options)
-          self.associations += [association]
+          self.associations += [association] unless self.associations.any? { |a| a.attr_name == attr_name }
 
           define_method(attr_name) do
             _cached_relationship(attr_name) do
