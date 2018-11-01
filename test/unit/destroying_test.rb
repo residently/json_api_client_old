@@ -11,14 +11,29 @@ class DestroyingTest < MiniTest::Test
   end
 
   def test_destroy
-    stub_request(:delete, "http://example.com/users/6")
+    stub_request(:get, "http://example.com/users/1")
+      .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
+        data: [
+          {id: 1, attributes: {name: "Jeff Ching", email_address: "ching.jeff@gmail.com"}}
+        ]
+      }.to_json)
+
+    users = User.find(1)
+    user = users.first
+    assert(user.persisted?)
+    assert_equal(false, user.new_record?)
+    assert_equal(false, user.destroyed?)
+
+    stub_request(:delete, "http://example.com/users/1")
       .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
         data: []
       }.to_json)
 
-    user = User.new(id: 6)
     assert(user.destroy, "successful deletion should return truish value")
     assert_equal(false, user.persisted?)
+    assert_equal(false, user.new_record?)
+    assert(user.destroyed?)
+    assert_equal(1, user.id)
   end
 
   def test_destroy_no_content
@@ -43,18 +58,23 @@ class DestroyingTest < MiniTest::Test
     assert(user.persisted?)
 
     stub_request(:delete, "http://example.com/users/1")
-      .to_return(headers: {content_type: "application/json"}, body: {
+      .to_return(headers: { content_type: "application/json" }, body: {
         data: [],
-        errors: [{
-          status: 400,
-          errors: [
-            {title: "Some failure message"}
-          ]
-        }]
+        errors: [
+          {
+            status: 400,
+            title: "Some failure message",
+            source: {
+              pointer: "/data/attributes/email_address"
+            }
+          }
+        ]
       }.to_json)
 
     assert_equal(false, user.destroy, "failed deletion should return falsy value")
     assert_equal(true, user.persisted?, "user should still be persisted because destroy failed")
+    assert(user.errors.present?)
+    assert_equal("Some failure message", user.errors.messages[:email_address].first, "user should contain the errors describing the failure")
   end
 
   def test_callbacks

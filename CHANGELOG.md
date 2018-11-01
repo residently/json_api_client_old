@@ -2,6 +2,53 @@
 
 ## Unreleased
 
+## v1.6.4
+- [#314](https://github.com/JsonApiClient/json_api_client/pull/314) - Mimic ActiveRecord behavior when destroying a resource:
+  * Add `destroyed?` method
+  * Do not clear resource attributes
+  * Return `false` on `persisted?` after being destroyed
+  * Return `false` on `new_record?` after being destroyed
+
+## v1.6.3
+
+- [#312](https://githup.com/JsonApiClient/json_api_client/pull/312) - Don't raise on `422`
+
+## v1.6.2
+
+- [#311](https://githup.com/JsonApiClient/json_api_client/pull/311) - Raise JsonApiClient::Errors::ClientError for unhandled 4xx responses
+
+## v1.6.1
+
+- [#297](https://githup.com/JsonApiClient/json_api_client/pull/297) - Fix test_helper
+- [#298](https://githup.com/JsonApiClient/json_api_client/pull/298) - README update: arguments for custom connections run method
+- [#306](https://githup.com/JsonApiClient/json_api_client/pull/306) - README update: pagination override examples
+- [#307](https://githup.com/JsonApiClient/json_api_client/pull/307) - Symbolize params keys on model initialize
+- [#304](https://githup.com/JsonApiClient/json_api_client/pull/304) - Optional add default to changes
+- [#300](https://githup.com/JsonApiClient/json_api_client/pull/300) - Define methods for properties and associations getter/setter
+
+## v1.6.0
+
+- [#281](https://github.com/JsonApiClient/json_api_client/pull/281) - Optimize dynamic attribute deref
+- [#280](https://github.com/JsonApiClient/json_api_client/pull/280) - Fix custom headers inheritance
+- [#287](https://github.com/JsonApiClient/json_api_client/pull/287) - Allow pagination params to be `nil`
+- [#284](https://github.com/JsonApiClient/json_api_client/pull/284) - Fix filter to not filter out `[]` values
+- [#285](https://github.com/JsonApiClient/json_api_client/pull/285) - Add include params for create/update
+- [#293](https://github.com/JsonApiClient/json_api_client/pull/293) - Fix side-effects in scopes
+
+## v1.5.3
+
+- [#266](https://github.com/chingor13/json_api_client/pull/266) - Fix default attributes being overridden
+- [#267](https://github.com/chingor13/json_api_client/pull/267) - Fix custom pagination params
+- [#271](https://github.com/chingor13/json_api_client/pull/271) - Fix assert_nil warnings
+- [#275](https://github.com/chingor13/json_api_client/pull/275) - Add error messages when destroy fails
+- [#277](https://github.com/chingor13/json_api_client/pull/277) - Correct handling of error source/pointer
+
+## v1.5.2
+
+- [#264](https://github.com/chingor13/json_api_client/pull/264) - Enable sparse fieldsets for nested models
+- [#263](https://github.com/chingor13/json_api_client/pull/263) - Fix initializing resource including relationships
+- [#260](https://github.com/chingor13/json_api_client/pull/260) - Use formatter for belongs_to keys
+
 ## v1.5.1
 
 - [#236](https://github.com/chingor13/json_api_client/pull/236) - Escape nested route keys

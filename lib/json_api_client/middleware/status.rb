@@ -28,8 +28,10 @@ module JsonApiClient
           raise Errors::NotFound, env[:url]
         when 409
           raise Errors::Conflict, env
+        when 422
+          # Allow to proceed as resource errors will be populated
         when 400..499
-          # some other error
+          raise Errors::ClientError, env
         when 500..599
           raise Errors::ServerError, env
         else

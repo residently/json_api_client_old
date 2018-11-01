@@ -69,9 +69,73 @@ class CreationTest < MiniTest::Test
                               title: "Rails is Omakase"
                           })
 
+    assert article.new_record?
+    assert article.save
+    assert article.persisted?
+    assert_equal(false, article.new_record?)
+    assert_equal "1", article.id
+  end
+
+  def test_can_create_with_includes_and_fields
+    stub_request(:post, "http://example.com/articles")
+        .with(
+            headers: { content_type: "application/vnd.api+json", accept: "application/vnd.api+json" },
+            query: { include: 'comments,author.comments', fields: { articles: 'title', authors: 'name' } },
+            body: {
+                data: {
+                    type: "articles",
+                    attributes: {
+                        title: "Rails is Omakase"
+                    }
+                }
+            }.to_json
+        ).to_return(
+            headers: { content_type: "application/vnd.api+json" },
+            body: {
+                data: {
+                    type: "articles",
+                    id: "1",
+                    attributes: {
+                        title: "Rails is Omakase"
+                    },
+                    relationships: {
+                        comments: {
+                            data: [
+                                {
+                                    id: "2",
+                                    type: "comments"
+                                }
+                            ]
+                        },
+                        author: {
+                            data: nil
+                        }
+                    }
+                },
+                included: [
+                    {
+                        id: "2",
+                        type: "comments",
+                        attributes: {
+                            body: "it is isn't it ?"
+                        }
+                    }
+                ]
+            }.to_json
+    )
+    article = Article.new({
+                              title: "Rails is Omakase"
+                          })
+    article.request_includes(:comments, author: :comments).
+        request_select(:title, authors: [:name])
+
     assert article.save
     assert article.persisted?
     assert_equal "1", article.id
+    assert_nil article.author
+    assert_equal 1, article.comments.size
+    assert_equal "2", article.comments.first.id
+    assert_equal "it is isn't it ?", article.comments.first.body
   end
 
   def test_can_create_with_links
@@ -132,7 +196,7 @@ class CreationTest < MiniTest::Test
 
   end
 
-  def test_correct_create_with_nil_attirbute_value
+  def test_correct_create_with_nil_attribute_value
     stub_request(:post, "http://example.com/authors")
       .with(headers: {
         content_type: "application/vnd.api+json",
@@ -207,6 +271,43 @@ class CreationTest < MiniTest::Test
 
     callback_test = CallbackTest.create({foo: 1, bar: 1})
     assert_equal 100, callback_test.bar
+  end
+
+  def test_create_with_relationships_in_payload
+    stub_request(:post, 'http://example.com/articles')
+        .with(headers: {content_type: 'application/vnd.api+json', accept: 'application/vnd.api+json'}, body: {
+            data: {
+                type: 'articles',
+                attributes: {
+                    title: 'Rails is Omakase'
+                },
+                relationships: {
+                    comments: {
+                        data: [
+                            {
+                                id: '2',
+                                type: 'comments'
+                            }
+                        ]
+                    }
+                }
+            }
+        }.to_json)
+        .to_return(headers: {content_type: 'application/vnd.api+json'}, body: {
+            data: {
+                type: 'articles',
+                id: '1',
+                attributes: {
+                    title: 'Rails is Omakase'
+                }
+            }
+        }.to_json)
+
+    article = Article.new(title: 'Rails is Omakase', relationships: {comments: [Comment.new(id: 2)]})
+
+    assert article.save
+    assert article.persisted?
+    assert_equal "1", article.id
   end
 
 end

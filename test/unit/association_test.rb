@@ -40,7 +40,138 @@ module Namespaced
   end
 end
 
+class Formatted < TestResource
+  def self.key_formatter
+    JsonApiClient::DasherizedKeyFormatter
+  end
+
+  def self.route_formatter
+    JsonApiClient::DasherizedRouteFormatter
+  end
+end
+
+class MultiWordParent < Formatted
+end
+
+class MultiWordChild < Formatted
+  belongs_to :multi_word_parent
+  self.read_only_attributes = read_only_attributes + [:multi_word_parent_id]
+
+  def self.key_formatter
+    JsonApiClient::DasherizedKeyFormatter
+  end
+
+  def self.route_formatter
+    JsonApiClient::UnderscoredKeyFormatter
+  end
+end
+
+class Account < TestResource
+  property :name
+  property :is_active, default: true
+  property :balance
+end
+
+class UserAccount < TestResource
+  self.add_defaults_to_changes = true
+  property :name
+  property :is_active, default: true
+  property :balance
+end
+
 class AssociationTest < MiniTest::Test
+
+  def test_default_properties_no_changes
+    stub_request(:post, 'http://example.com/accounts').
+        with(headers: { content_type: 'application/vnd.api+json', accept: 'application/vnd.api+json' }, body: {
+            data: {
+                type: 'accounts',
+                attributes: {
+                    name: 'foo'
+                }
+            }
+        }.to_json)
+        .to_return(headers: { content_type: 'application/vnd.api+json' }, body: {
+            data: {
+                id: '1',
+                type: 'accounts',
+                attributes: {
+                    name: 'foo',
+                    is_active: false,
+                    balance: '0.0'
+                }
+            }
+        }.to_json)
+    record = Account.new(name: 'foo')
+    assert record.save
+    assert_equal(false, record.is_active)
+    assert_equal('0.0', record.balance)
+  end
+
+  def test_default_properties_changes
+    stub_request(:post, 'http://example.com/user_accounts').
+        with(headers: { content_type: 'application/vnd.api+json', accept: 'application/vnd.api+json' }, body: {
+            data: {
+                type: 'user_accounts',
+                attributes: {
+                    name: 'foo',
+                    is_active: true
+                }
+            }
+        }.to_json)
+        .to_return(headers: { content_type: 'application/vnd.api+json' }, body: {
+            data: {
+                id: '1',
+                type: 'user_accounts',
+                attributes: {
+                    name: 'foo',
+                    is_active: true,
+                    balance: '0.0'
+                }
+            }
+        }.to_json)
+    record = UserAccount.new(name: 'foo')
+    assert record.save
+    assert_equal(true, record.is_active)
+    assert_equal('0.0', record.balance)
+  end
+
+  def test_belongs_to_urls_are_formatted
+    request = stub_request(:get, "http://example.com/multi_word_parents/1/multi_word_children")
+      .to_return(headers: {content_type: "application/vnd.api+json"}, body: { data: [] }.to_json)
+
+    MultiWordChild.where(multi_word_parent_id: 1).to_a
+
+    assert_requested(request)
+  end
+
+  def test_belongs_to_urls_create_record
+    stub_request(:post, 'http://example.com/multi_word_parents/1/multi_word_children').
+        with(headers: { content_type: 'application/vnd.api+json', accept: 'application/vnd.api+json' }, body: {
+            data: {
+                type: 'multi_word_children',
+                attributes: {
+                    foo: 'bar',
+                    'multi-word-field': true
+                }
+            }
+        }.to_json)
+        .to_return(headers: { content_type: 'application/vnd.api+json' }, body: {
+            data: {
+                    id: '2',
+                    type: 'multi_word_children',
+                    attributes: {
+                        foo: 'bar',
+                        'multi-word-field': true
+                    }
+                }
+        }.to_json)
+
+    record = MultiWordChild.new(multi_word_parent_id: 1, foo: 'bar', multi_word_field: true)
+    result = record.save
+    assert result
+    assert_equal('2', record.id)
+  end
 
   def test_load_has_one
     stub_request(:get, "http://example.com/properties/1")
@@ -272,7 +403,7 @@ class AssociationTest < MiniTest::Test
   end
 
   def test_load_has_many_with_multiword_resource_name
-    stub_request(:get, "http://example.com/prefixed_owners")
+    stub_request(:get, "http://example.com/prefixed_owners?include=prefixed_properties")
       .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
         data: [
           {
@@ -322,7 +453,7 @@ class AssociationTest < MiniTest::Test
           }
         ]
       }.to_json)
-    owners = PrefixedOwner.all
+    owners = PrefixedOwner.includes(:prefixed_properties).all
     jeff = owners[0]
     assert_equal("Jeff Ching", jeff.name)
     assert_equal(2, jeff.prefixed_properties.length)
@@ -334,7 +465,7 @@ class AssociationTest < MiniTest::Test
     with_altered_config(PrefixedOwner, :json_key_format => :camelized_key,
       :route_format => :dasherized_route) do
 
-      stub_request(:get, "http://example.com/prefixed-owners")
+      stub_request(:get, "http://example.com/prefixed-owners?include=prefixed-properties")
         .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
           data: [
             {
@@ -384,7 +515,7 @@ class AssociationTest < MiniTest::Test
             }
           ]
         }.to_json)
-      owners = PrefixedOwner.all
+      owners = PrefixedOwner.includes("prefixed-properties").all
       jeff = owners[0]
       assert_equal("Jeff Ching", jeff.name)
       assert_equal(2, jeff.prefixed_properties.length)

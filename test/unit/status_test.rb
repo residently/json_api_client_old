@@ -56,4 +56,29 @@ class StatusTest < MiniTest::Test
     end
   end
 
+  def test_server_responding_with_408_status
+    stub_request(:get, "http://example.com/users/1")
+      .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
+        meta: {
+          status: 408,
+          message: "Request timeout"
+        }
+      }.to_json)
+
+    assert_raises JsonApiClient::Errors::ClientError do
+      User.find(1)
+    end
+  end
+
+  def test_server_responding_with_422_status
+    stub_request(:get, "http://example.com/users/1")
+      .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
+        meta: {
+          status: 422
+        }
+      }.to_json)
+
+    # We want to test that this response does not raise an error
+    User.find(1)
+  end
 end
