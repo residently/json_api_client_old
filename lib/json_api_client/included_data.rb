@@ -6,12 +6,16 @@ module JsonApiClient
       record_class = result_set.record_class
       grouped_data = data.group_by{|datum| datum["type"]}
       grouped_included_set = grouped_data.each_with_object({}) do |(type, records), h|
-        klass = Utils.compute_type(record_class, record_class.key_formatter.unformat(type).singularize.classify)
-        h[type] = records.map do |record|
-          params = klass.parser.parameters_from_resource(record)
-          klass.load(params).tap do |resource|
-            resource.last_result_set = result_set
+        begin
+          klass = Utils.compute_type(record_class, record_class.key_formatter.unformat(type).singularize.classify)
+          h[type] = records.map do |record|
+            params = klass.parser.parameters_from_resource(record)
+            klass.load(params).tap do |resource|
+              resource.last_result_set = result_set
+            end
           end
+        rescue NameError => _
+          puts "Missing '#{type}' type in JSON API response"
         end
       end
 
@@ -28,8 +32,6 @@ module JsonApiClient
       end
 
       @data = grouped_included_set
-    rescue NameError => _
-      puts "Missing '#{type}' type in JSON API response"
     end
 
     def data_for(method_name, definition)
