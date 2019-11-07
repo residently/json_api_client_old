@@ -2,6 +2,7 @@ module JsonApiClient
   module Utils
 
     def self.compute_type(klass, type_name)
+      return klass.custom_type_to_class.fetch(type_name).constantize if klass.custom_type_to_class.key?(type_name)
       # If the type is prefixed with a scope operator then we assume that
       # the type_name is an absolute reference.
       return type_name.constantize if type_name.match(/^::/)
@@ -22,6 +23,25 @@ module JsonApiClient
       end
 
       raise NameError, "uninitialized constant #{candidates.first}"
+    end
+
+    def self.parse_includes(klass, *tables)
+      tables.map do |table|
+        case table
+        when Hash
+          table.map do |k, v|
+            parse_includes(klass, *v).map do |sub|
+              "#{k}.#{sub}"
+            end
+          end
+        when Array
+          table.map do |v|
+            parse_includes(klass, *v)
+          end
+        else
+          klass.key_formatter.format(table)
+        end
+      end.flatten
     end
 
   end

@@ -1,30 +1,29 @@
 module JsonApiClient
   module Associations
     module BelongsTo
-      extend ActiveSupport::Concern
-
-      module ClassMethods
-        def belongs_to(attr_name, options = {})
-          # self.associations = self.associations + [HasOne::Association.new(attr_name, self, options)]
-          unless self.associations.any? {|a| a.attr_name == attr_name}
-            self.associations += [BelongsTo::Association.new(attr_name, self, options)]
-          end
-        end
-      end
-
       class Association < BaseAssociation
         include Helpers::URI
-        def param
-          :"#{attr_name}_id"
+
+        attr_reader :param
+
+        def initialize(attr_name, klass, options = {})
+          super
+          @param = options.fetch(:param, :"#{attr_name}_id").to_sym
+          @shallow_path = options.fetch(:shallow_path, false)
         end
 
-        def to_prefix_path
-          "#{attr_name.to_s.pluralize}/%{#{param}}"
+        def shallow_path?
+          @shallow_path
         end
 
-        def set_prefix_path(attrs)
+        def to_prefix_path(formatter)
+          "#{formatter.format(attr_name.to_s.pluralize)}/%{#{param}}"
+        end
+
+        def set_prefix_path(attrs, formatter)
+          return if shallow_path? && !attrs[param]
           attrs[param] = encode_part(attrs[param]) if attrs.key?(param)
-          to_prefix_path % attrs
+          to_prefix_path(formatter) % attrs
         end
       end
     end

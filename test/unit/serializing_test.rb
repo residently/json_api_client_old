@@ -6,6 +6,10 @@ class SerializingTest < MiniTest::Test
     self.read_only_attributes += ['foo']
   end
 
+  class NestedResource < TestResource
+    belongs_to :bar
+  end
+
   class CustomSerializerAttributes < TestResource
 
     protected
@@ -46,6 +50,29 @@ class SerializingTest < MiniTest::Test
       }.to_json)
     resource = Article.find(1)
     assert_equal expected, resource.first.as_json
+  end
+
+  def test_as_json_involving_last_result_set
+    expected = {
+      'type' => 'articles',
+      'id' => '1',
+      'attributes' => {
+        'title' => 'Rails is Omakase'
+      }
+    }
+    stub_request(:post, "http://example.com/articles")
+      .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
+        data: [{
+          type: "articles",
+          id: "1",
+          attributes: {
+            title: "Rails is Omakase"
+          }
+        }]
+      }.to_json)
+
+    resource = Article.create
+    assert_equal expected, resource.as_json
   end
 
   def test_as_json_api
@@ -317,4 +344,19 @@ class SerializingTest < MiniTest::Test
       assert_equal expected, article.as_json_api['relationships']
     end
   end
+
+  def test_ensure_nested_path_params_not_serialized
+    resource = NestedResource.new(foo: 'bar', id: 1, bar_id: 99)
+
+    expected = {
+      'id' => 1,
+      'type' => "nested_resources",
+      'attributes' => {
+        'foo' => 'bar'
+      }
+    }
+
+    assert_equal expected, resource.as_json_api
+  end
+
 end

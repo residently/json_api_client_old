@@ -1,6 +1,20 @@
 require 'test_helper'
 
-class TopLevelLinksTest < MiniTest::Test
+# Copied from TopLevelLinksTest and modified to have consistent
+# pagination params using the new NestedParamPaginator
+class NestedParamPaginatorTopLevelLinksTest < MiniTest::Test
+
+  def setup
+    @nested_param_paginator = JsonApiClient::Paginating::NestedParamPaginator
+    @default_paginator = JsonApiClient::Paginating::Paginator
+    Article.paginator = @nested_param_paginator
+  end
+
+  def teardown
+    @nested_param_paginator.page_param = @nested_param_paginator::DEFAULT_PAGE_PARAM
+    @nested_param_paginator.per_page_param = @nested_param_paginator::DEFAULT_PER_PAGE_PARAM
+    Article.paginator = @default_paginator
+  end
 
   def test_can_parse_global_links
     stub_request(:get, "http://example.com/articles/1")
@@ -47,13 +61,13 @@ class TopLevelLinksTest < MiniTest::Test
         }],
         links: {
           self: "http://example.com/articles",
-          next: "http://example.com/articles?page=2",
+          next: "http://example.com/articles?page[page]=2",
           prev: nil,
           first: "http://example.com/articles",
-          last: "http://example.com/articles?page=6"
+          last: "http://example.com/articles?page[page]=6"
         }
       }.to_json)
-    stub_request(:get, "http://example.com/articles?page=2")
+    stub_request(:get, "http://example.com/articles?page[page]=2")
       .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
         data: [{
           type: "articles",
@@ -63,11 +77,11 @@ class TopLevelLinksTest < MiniTest::Test
           }
         }],
         links: {
-          self: "http://example.com/articles?page=2",
-          next: "http://example.com/articles?page=3",
+          self: "http://example.com/articles?page[page]=2",
+          next: "http://example.com/articles?page[page]=3",
           prev: "http://example.com/articles",
           first: "http://example.com/articles",
-          last: "http://example.com/articles?page=6"
+          last: "http://example.com/articles?page[page]=6"
         }
       }.to_json)
 
@@ -75,7 +89,7 @@ class TopLevelLinksTest < MiniTest::Test
   end
 
   def test_can_parse_pagination_links_with_custom_config
-    JsonApiClient::Paginating::Paginator.page_param = "page[number]"
+    @nested_param_paginator.page_param = "number"
 
     stub_request(:get, "http://example.com/articles")
       .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
@@ -113,8 +127,6 @@ class TopLevelLinksTest < MiniTest::Test
       }.to_json)
 
     assert_pagination
-
-    JsonApiClient::Paginating::Paginator.page_param = "page"
   end
 
   def test_can_parse_pagination_links_when_no_next_page
@@ -131,7 +143,7 @@ class TopLevelLinksTest < MiniTest::Test
           self: "http://example.com/articles",
           prev: nil,
           first: "http://example.com/articles",
-          last: "http://example.com/articles?page=1"
+          last: "http://example.com/articles?page[page]=1"
         }
       }.to_json)
 
@@ -154,7 +166,7 @@ class TopLevelLinksTest < MiniTest::Test
             meta: {}
           },
           next: {
-            href: "http://example.com/articles?page=2",
+            href: "http://example.com/articles?page[page]=2",
             meta: {}
           },
           prev: nil,
@@ -163,12 +175,12 @@ class TopLevelLinksTest < MiniTest::Test
             meta: {}
           },
           last: {
-            href: "http://example.com/articles?page=6",
+            href: "http://example.com/articles?page[page]=6",
             meta: {}
           }
         }
       }.to_json)
-    stub_request(:get, "http://example.com/articles?page=2")
+    stub_request(:get, "http://example.com/articles?page[page]=2")
       .to_return(headers: {content_type: "application/vnd.api+json"}, body: {
         data: [{
           type: "articles",
@@ -179,11 +191,11 @@ class TopLevelLinksTest < MiniTest::Test
         }],
         links: {
           self: {
-            href: "http://example.com/articles?page=2",
+            href: "http://example.com/articles?page[page]=2",
             meta: {}
           },
           next: {
-            href: "http://example.com/articles?page=3",
+            href: "http://example.com/articles?page[page]=3",
             meta: {}
           },
           prev: {
@@ -195,7 +207,7 @@ class TopLevelLinksTest < MiniTest::Test
             meta: {}
           },
           last: {
-            href: "http://example.com/articles?page=6",
+            href: "http://example.com/articles?page[page]=6",
             meta: {}
           }
         }
