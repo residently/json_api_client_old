@@ -20,10 +20,13 @@ module JsonApiClient
       end
 
       def where(conditions = {})
+        Rails.logger.info "[JsonApiClient::Query::Builder][#where] - prefix_params: #{klass.prefix_params.inspect}"
         # pull out any path params here
         path_conditions = conditions.slice(*klass.prefix_params)
         unpathed_conditions = conditions.except(*klass.prefix_params)
 
+        Rails.logger.info "[JsonApiClient::Query::Builder][#where] - path_conditions: #{path_conditions.inspect}"
+        Rails.logger.info "[JsonApiClient::Query::Builder][#where] - unpathed_conditions: #{unpathed_conditions.inspect}"
         _new_scope( path_params: path_conditions, filters: unpathed_conditions )
       end
 
