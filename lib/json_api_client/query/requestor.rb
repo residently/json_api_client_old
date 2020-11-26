@@ -26,6 +26,8 @@ module JsonApiClient
       def get(params = {})
         path = resource_path(params)
         params.delete(klass.primary_key)
+        Rails.logger.info "[JsonApiClient::Query::Requestor][#get] - path: #{path}"
+        Rails.logger.info "[JsonApiClient::Query::Requestor][#get] - params: #{params}"
         request(:get, path, params: params)
       end
 
