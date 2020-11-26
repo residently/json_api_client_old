@@ -38,6 +38,7 @@ module JsonApiClient
       Rails.logger.info "[JsonApiClient::Connection][#run] - path: #{path}"
       Rails.logger.info "[JsonApiClient::Connection][#run] - params: #{params}"
       faraday.run_request(request_method, path, body, headers) do |request|
+        Rails.logger.info "[JsonApiClient::Connection][#run] - inside run_request: #{params}"
         request.params.update(params) if params
       end
     end
