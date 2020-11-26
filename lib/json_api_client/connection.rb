@@ -11,8 +11,11 @@ module JsonApiClient
       status_middleware_options[:custom_handlers] = options[:status_handlers] if options[:status_handlers].present?
       @faraday = Faraday.new(site, connection_options) do |builder|
         builder.request :json
+        builder.use Middleware::UrlLogger, name: 'before_json_request'
         builder.use Middleware::JsonRequest
+        builder.use Middleware::UrlLogger, name: 'before_status'
         builder.use Middleware::Status, status_middleware_options
+        builder.use Middleware::UrlLogger, name: 'before_parse_json'
         builder.use Middleware::ParseJson
         builder.use ::FaradayMiddleware::Gzip
         builder.adapter(*adapter_options)
