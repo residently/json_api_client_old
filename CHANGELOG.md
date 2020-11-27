@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.17.1
+- [#370](https://github.com/JsonApiClient/json_api_client/pull/370) - bigdecimal 2 support
+
+## 1.17.0
+
+- [#364](https://github.com/JsonApiClient/json_api_client/pull/364) - Relax faraday and faraday middleware versions
+
 ## 1.16.1
 
 - [#361](https://github.com/JsonApiClient/json_api_client/pull/361) - Call super from inherited method so that it will execute parent classes' implementations
