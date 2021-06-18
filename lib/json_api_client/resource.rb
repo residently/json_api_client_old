@@ -584,7 +584,7 @@ module JsonApiClient
     end
 
     def method_missing(method, *args)
-      if defined?($_resource_attribute_calls) && !method.end_with?('=')
+      if defined?($_resource_attribute_calls) && !method.to_s.ends_with?('=')
         $_resource_attribute_calls[self.class] ||= {}
         $_resource_attribute_calls[self.class][method] ||= 0
         $_resource_attribute_calls[self.class][method] += 1
