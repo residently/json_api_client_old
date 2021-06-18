@@ -584,6 +584,8 @@ module JsonApiClient
     end
 
     def method_missing(method, *args)
+      track_attribute_call(method) if tracking_attributes?
+
       relationship_definition = relationship_definition_for(method)
 
       return super unless relationship_definition
@@ -639,5 +641,15 @@ module JsonApiClient
         errors.add(key, error_message_for(error))
       end
     end
+  end
+
+  def tracking_attributes?
+    defined?($_resource_attribute_calls) && $_resource_attribute_calls.present?
+  end
+
+  def track_attribute_call(method)
+    $_resource_attribute_calls[self.class] ||= {}
+    $_resource_attribute_calls[self.class][method] ||= 0
+    $_resource_attribute_calls[self.class][method] += 1
   end
 end
