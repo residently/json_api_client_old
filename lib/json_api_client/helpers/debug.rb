@@ -7,7 +7,6 @@ module JsonApiClient
         puts '----------------------------------------------------------'
         pp $_resource_attribute_calls
         puts '----------------------------------------------------------'
-        $_resource_attribute_calls = nil # To avoid risk of memory leaks
       end
     end
   end
