@@ -1,7 +1,7 @@
 module JsonApiClient
   module Helpers
     module Debug
-      def self.included
+      def self.included(_base)
         $_resource_attribute_calls = {}
       end
 
