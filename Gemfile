@@ -6,7 +6,7 @@ gem 'rake'
 gem 'appraisal'
 
 gem "activesupport"
-gem 'addressable', '~> 2.2'
+gem 'addressable', '~> 2.8'
 
 gem "codeclimate-test-reporter", group: :test, require: nil
 
