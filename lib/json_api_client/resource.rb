@@ -480,16 +480,18 @@ module JsonApiClient
       return false unless valid?
       raise JsonApiClient::Errors::ResourceImmutableError if _immutable
 
-      self.last_result_set = if persisted?
+      result_set = if persisted?
         self.class.requestor.update(self)
       else
         self.class.requestor.create(self)
       end
 
-      if last_result_set.has_errors?
+      if result_set.has_errors?
+        self.last_result_set.errors = result_set.errors
         fill_errors
         false
       else
+        self.last_result_set = result_set
         self.errors.clear if self.errors
         self.request_params.clear unless self.class.keep_request_params
         mark_as_persisted!
@@ -511,11 +513,13 @@ module JsonApiClient
     def destroy
       raise JsonApiClient::Errors::ResourceImmutableError if _immutable
 
-      self.last_result_set = self.class.requestor.destroy(self)
+      result_set = self.class.requestor.destroy(self)
       if last_result_set.has_errors?
+        self.last_result_set.errors = result_set.errors
         fill_errors
         false
       else
+        self.last_result_set = result_set
         mark_as_destroyed!
         _clear_cached_relationships
         _clear_belongs_to_params
