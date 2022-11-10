@@ -514,7 +514,7 @@ module JsonApiClient
       raise JsonApiClient::Errors::ResourceImmutableError if _immutable
 
       result_set = self.class.requestor.destroy(self)
-      if last_result_set.has_errors?
+      if result_set.has_errors?
         self.last_result_set.errors = result_set.errors
         fill_errors
         false
