@@ -5,5 +5,6 @@ module JsonApiClient
     autoload :DynamicAttributes, 'json_api_client/helpers/dynamic_attributes'
     autoload :URI, 'json_api_client/helpers/uri'
     autoload :Associatable, 'json_api_client/helpers/associatable'
+    autoload :Debug, 'json_api_client/helpers/debug'
   end
 end

@@ -603,6 +603,12 @@ module JsonApiClient
     end
 
     def method_missing(method, *args)
+      if defined?($_resource_attribute_calls) && !method.to_s.ends_with?('=')
+        $_resource_attribute_calls[self.class.to_s] ||= {}
+        $_resource_attribute_calls[self.class.to_s][method] ||= 0
+        $_resource_attribute_calls[self.class.to_s][method] += 1
+      end
+
       relationship_definition = relationship_definition_for(method)
 
       return super unless relationship_definition
