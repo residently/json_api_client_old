@@ -487,8 +487,7 @@ module JsonApiClient
       end
 
       if result_set.has_errors?
-        self.last_result_set.errors = result_set.errors
-        fill_errors
+        fill_errors(result_set.errors)
         false
       else
         self.last_result_set = result_set
@@ -515,8 +514,7 @@ module JsonApiClient
 
       result_set = self.class.requestor.destroy(self)
       if result_set.has_errors?
-        self.last_result_set.errors = result_set.errors
-        fill_errors
+        fill_errors(result_set.errors)
         false
       else
         self.last_result_set = result_set
@@ -652,8 +650,8 @@ module JsonApiClient
       error.error_msg
     end
 
-    def fill_errors
-      last_result_set.errors.each do |error|
+    def fill_errors(new_errors)
+      new_errors.each do |error|
         key = self.class.key_formatter.unformat(error.error_key)
         errors.add(key, error_message_for(error))
       end
